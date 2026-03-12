@@ -1,0 +1,473 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;0,900;1,500;1,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Warm Light Beige — stronger than before */
+    --background: 34 24% 92%;
+    --foreground: 25 14% 16%;
+
+    /* White cards */
+    --card: 0 0% 100%;
+    --card-foreground: 25 14% 16%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 25 14% 16%;
+
+    /* Vintage Charcoal primary */
+    --primary: 25 14% 16%;
+    --primary-foreground: 40 50% 97%;
+
+    /* Warm cream secondary */
+    --secondary: 36 28% 93%;
+    --secondary-foreground: 25 14% 16%;
+
+    --muted: 34 18% 88%;
+    --muted-foreground: 25 10% 45%;
+
+    /* Warm Amber accent */
+    --accent: 36 60% 45%;
+    --accent-foreground: 40 50% 97%;
+
+    /* Warning / orange */
+    --destructive: 36 90% 44%;
+    --destructive-foreground: 40 50% 97%;
+
+    --success: 82 40% 42%;
+    --success-foreground: 40 50% 97%;
+
+    --warning: 43 70% 55%;
+    --warning-foreground: 25 14% 16%;
+
+    --border: 30 15% 82%;
+    --input: 30 15% 82%;
+    --ring: 25 14% 16%;
+
+    --radius: 0.75rem;
+
+    /* Charcoal sidebar */
+    --sidebar-background: 25 14% 10%;
+    --sidebar-foreground: 38 30% 90%;
+    --sidebar-primary: 43 50% 55%;
+    --sidebar-primary-foreground: 25 14% 10%;
+    --sidebar-accent: 25 14% 16%;
+    --sidebar-accent-foreground: 38 30% 90%;
+    --sidebar-border: 25 12% 18%;
+    --sidebar-ring: 43 50% 55%;
+
+    --font-heading: "Playfair Display", Georgia, serif;
+    --font-body: "Inter", sans-serif;
+  }
+
+  .dark {
+    --background: 25 14% 8%;
+    --foreground: 38 30% 90%;
+    --card: 25 14% 12%;
+    --card-foreground: 38 30% 90%;
+    --popover: 25 14% 12%;
+    --popover-foreground: 38 30% 90%;
+    --primary: 43 50% 55%;
+    --primary-foreground: 25 14% 10%;
+    --secondary: 25 14% 16%;
+    --secondary-foreground: 38 30% 90%;
+    --muted: 25 14% 16%;
+    --muted-foreground: 30 12% 55%;
+    --accent: 82 32% 36%;
+    --accent-foreground: 38 30% 90%;
+    --destructive: 36 90% 44%;
+    --destructive-foreground: 38 30% 90%;
+    --success: 82 32% 36%;
+    --success-foreground: 38 30% 90%;
+    --warning: 43 50% 45%;
+    --warning-foreground: 38 30% 90%;
+    --border: 25 14% 18%;
+    --input: 25 14% 18%;
+    --ring: 43 50% 55%;
+    --sidebar-background: 25 14% 6%;
+    --sidebar-foreground: 38 30% 90%;
+    --sidebar-primary: 43 50% 55%;
+    --sidebar-primary-foreground: 25 14% 6%;
+    --sidebar-accent: 25 14% 12%;
+    --sidebar-accent-foreground: 38 30% 90%;
+    --sidebar-border: 25 12% 12%;
+    --sidebar-ring: 43 50% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+    font-family: var(--font-body);
+    touch-action: manipulation;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    text-wrap: balance;
+  }
+
+  table,
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* ─── Polished card — 18px radius, soft shadow ─── */
+  .polished-card {
+    background: #ffffff;
+    border: 1px solid rgba(47, 42, 36, 0.08);
+    border-radius: 18px;
+    box-shadow:
+      0 2px 8px rgba(47, 42, 36, 0.06),
+      0 1px 3px rgba(47, 42, 36, 0.04);
+    transition:
+      box-shadow 0.3s ease,
+      transform 0.3s ease;
+  }
+
+  .polished-card:hover {
+    box-shadow:
+      0 10px 35px rgba(47, 42, 36, 0.12),
+      0 4px 14px rgba(47, 42, 36, 0.07);
+    transform: translateY(-2px);
+  }
+
+  .polished-card:active {
+    transform: translateY(0);
+  }
+
+  /* Static version (no hover lift) */
+  .polished-card-static {
+    background: #ffffff;
+    border: 1px solid rgba(47, 42, 36, 0.08);
+    border-radius: 18px;
+    box-shadow:
+      0 2px 8px rgba(47, 42, 36, 0.06),
+      0 1px 3px rgba(47, 42, 36, 0.04);
+  }
+
+  /* ─── Paper texture ─── */
+  .paper-texture {
+    position: relative;
+    background-color: #f1ece3;
+  }
+
+  .paper-texture::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.25;
+    pointer-events: none;
+    z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+  }
+
+  .paper-texture > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ─── Grain overlay (subtle) ─── */
+  .grain-overlay {
+    position: relative;
+  }
+
+  .grain-overlay::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: 1;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+    background-size: 150px 150px;
+  }
+
+  .btn-primary {
+    background: #2f2a24;
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 2px 8px rgba(47, 42, 36, 0.15);
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary:hover {
+    background: #3d362e;
+    color: #ffffff !important;
+    box-shadow: 0 6px 20px rgba(47, 42, 36, 0.25);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(47, 42, 36, 0.12);
+  }
+
+  .btn-gold {
+    background: #c8a951;
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(200, 169, 81, 0.25);
+    transition: all 0.3s ease;
+  }
+
+  .btn-gold:hover {
+    background: #a88a33;
+    color: #ffffff !important;
+    box-shadow: 0 6px 20px rgba(200, 169, 81, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .btn-gold:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(200, 169, 81, 0.2);
+  }
+
+  .btn-outline-dark {
+    background: transparent;
+    color: #2f2a24;
+    border: 1.5px solid #2f2a24;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .btn-outline-dark:hover {
+    background: #2f2a24;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(47, 42, 36, 0.15);
+    transform: translateY(-1px);
+  }
+
+  .btn-outline-dark:active {
+    transform: translateY(0);
+  }
+
+  .input-polished {
+    background: #ffffff;
+    border: 1.5px solid rgba(47, 42, 36, 0.15);
+    border-radius: 12px;
+    transition:
+      border-color 0.3s ease,
+      box-shadow 0.3s ease;
+  }
+
+  .input-polished:focus {
+    border-color: #b07d3a;
+    box-shadow: 0 0 0 3px rgba(176, 125, 58, 0.12);
+    outline: none;
+  }
+
+  /* ─── Section divider ─── */
+  .divider-ornament {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: #8b7355;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .divider-ornament::before,
+  .divider-ornament::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #d6cebd;
+  }
+
+  /* ─── Tag / badge ─── */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 8px;
+    background: #ede6d6;
+    color: #2f2a24;
+    border: 1px solid rgba(47, 42, 36, 0.08);
+  }
+
+  .tag-olive {
+    background: #e8eddb;
+    color: #4a5631;
+    border-color: rgba(107, 122, 64, 0.15);
+  }
+
+  .tag-gold {
+    background: #faf3dd;
+    color: #8a7234;
+    border-color: rgba(200, 169, 81, 0.2);
+  }
+
+  /* ─── Stamp (for scores) ─── */
+  .stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.9rem;
+    border: 2.5px solid currentColor;
+    border-radius: 10px;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    transform: rotate(-1deg);
+  }
+
+  .stamp-olive {
+    color: #6b7a40;
+  }
+
+  .stamp-orange {
+    color: #d97706;
+  }
+
+  /* ─── Score ring ─── */
+  .score-ring {
+    @apply relative inline-flex items-center justify-center;
+  }
+
+  /* ─── Sidebar ─── */
+  .sidebar-retro {
+    background: linear-gradient(180deg, #2f2a24 0%, #1a1714 100%);
+  }
+
+  /* ─── Ticker tape ─── */
+  .ticker-tape {
+    background: #2f2a24;
+    color: #c8a951;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  /* ─── Fixed back button ─── */
+  .back-btn-fixed {
+    position: fixed;
+    top: 1.25rem;
+    left: 1.25rem;
+    z-index: 50;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.5rem 0.85rem;
+    border-radius: 12px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #8b7355;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(47, 42, 36, 0.08);
+    box-shadow: 0 2px 8px rgba(47, 42, 36, 0.06);
+    transition:
+      color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .back-btn-fixed:hover {
+    color: #2f2a24;
+    box-shadow: 0 4px 12px rgba(47, 42, 36, 0.1);
+  }
+
+  /* ─── Stat box ─── */
+  .stat-box {
+    background: #ffffff;
+    border: 1px solid rgba(47, 42, 36, 0.06);
+    border-radius: 14px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 4px rgba(47, 42, 36, 0.04);
+    transition: box-shadow 0.3s ease;
+  }
+
+  .stat-box:hover {
+    box-shadow: 0 4px 14px rgba(47, 42, 36, 0.08);
+  }
+
+  /* ─── Info box (eligibility) ─── */
+  .info-box-olive {
+    background: rgba(107, 122, 64, 0.06);
+    border: 1.5px solid rgba(107, 122, 64, 0.2);
+    border-radius: 14px;
+  }
+
+  .info-box-orange {
+    background: rgba(217, 119, 6, 0.06);
+    border: 1.5px solid rgba(217, 119, 6, 0.2);
+    border-radius: 14px;
+  }
+
+  /* ─── Mobile responsive adjustments ─── */
+  @media (max-width: 639px) {
+    .polished-card,
+    .polished-card-static {
+      border-radius: 14px;
+      padding: 1rem;
+    }
+
+    .polished-card:hover {
+      transform: none;
+    }
+
+    .stat-box {
+      padding: 1rem;
+      border-radius: 12px;
+    }
+
+    .stamp {
+      font-size: 0.75rem;
+      padding: 0.3rem 0.7rem;
+    }
+
+    .tag {
+      font-size: 0.625rem;
+      padding: 0.2rem 0.5rem;
+    }
+  }
+}

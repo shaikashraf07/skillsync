@@ -1,0 +1,8 @@
+node-service/node_modules/
+node-service/.env
+node-service/.env.test
+python-service/venv/
+python-service/__pycache__/
+python-service/.env
+*.pyc
+.DS_Store

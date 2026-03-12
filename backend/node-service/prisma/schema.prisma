@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CANDIDATE
+  RECRUITER
+  ADMIN
+}
+
+enum PostingType {
+  INTERNSHIP
+  PROJECT
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         Role
+  createdAt    DateTime @default(now())
+
+  candidateProfile CandidateProfile?
+  recruiterProfile RecruiterProfile?
+  notifications    Notification[]
+}
+
+model CandidateProfile {
+  id          String  @id @default(uuid())
+  userId      String  @unique
+  name        String?
+  phone       String?
+  location    String?
+  linkedinUrl String?
+  projects    Json?
+  experience  Json?
+  onboarded   Boolean @default(false)
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills       Skill[]
+  applications Application[]
+  matchScores  MatchScore[]
+}
+
+model RecruiterProfile {
+  id          String  @id @default(uuid())
+  userId      String  @unique
+  companyName String?
+  companySize String?
+  onboarded   Boolean @default(false)
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postings Posting[]
+}
+
+model Skill {
+  id           String @id @default(uuid())
+  candidateId  String
+  skillName    String
+  proficiency  Int    @default(1)
+
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, skillName])
+}
+
+model Posting {
+  id          String      @id @default(uuid())
+  recruiterId String
+  type        PostingType
+  title       String
+  description String
+  stipend     Int?
+  duration    String?
+  deadline    DateTime
+  location    String?
+  remote      Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+
+  recruiter     RecruiterProfile @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+  postingSkills PostingSkill[]
+  applications  Application[]
+  matchScores   MatchScore[]
+  notifications Notification[]
+}
+
+model PostingSkill {
+  id        String @id @default(uuid())
+  postingId String
+  skillName String
+  weight    Int    @default(1)
+
+  posting Posting @relation(fields: [postingId], references: [id], onDelete: Cascade)
+
+  @@unique([postingId, skillName])
+}
+
+model Application {
+  id          String   @id @default(uuid())
+  candidateId String
+  postingId   String
+  appliedAt   DateTime @default(now())
+  withdrawn   Boolean  @default(false)
+
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  posting   Posting          @relation(fields: [postingId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, postingId])
+}
+
+model MatchScore {
+  id           String   @id @default(uuid())
+  candidateId  String
+  postingId    String
+  score        Float
+  breakdown    Json?
+  gaps         Json?
+  isStale      Boolean  @default(false)
+  calculatedAt DateTime @default(now())
+
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  posting   Posting          @relation(fields: [postingId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, postingId])
+}
+
+enum NotificationType {
+  GENERAL
+  INVITE
+}
+
+enum NotificationAction {
+  NONE
+  ACCEPTED
+  REJECTED
+}
+
+model Notification {
+  id          String             @id @default(uuid())
+  userId      String
+  postingId   String?
+  message     String
+  type        NotificationType   @default(GENERAL)
+  actionTaken NotificationAction @default(NONE)
+  read        Boolean            @default(false)
+  createdAt   DateTime           @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posting Posting? @relation(fields: [postingId], references: [id], onDelete: Cascade)
+}
+
+model PendingOtp {
+  id        String   @id @default(uuid())
+  email     String
+  otpHash   String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
