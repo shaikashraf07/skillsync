@@ -9,12 +9,19 @@ const app = express();
 // ─── Core Middleware ───
 const allowedOrigins =
   process.env.NODE_ENV === "production"
-    ? [process.env.FRONTEND_URL].filter(Boolean)
+    ? [
+        process.env.FRONTEND_URL,
+        "https://localhost",          // Capacitor Android (androidScheme: https)
+        "capacitor://localhost",      // Capacitor Android fallback
+        "http://localhost",           // Capacitor Android dev
+      ].filter(Boolean)
     : [
       "http://localhost:8080",
       "http://localhost:8081",
       "http://localhost:5173",
       "http://localhost:3000",
+      "https://localhost",
+      "capacitor://localhost",
     ];
 
 app.use(

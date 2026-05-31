@@ -1,7 +1,13 @@
 import axios from "axios";
 
+// Production API URL — hardcoded so it's always baked into the Android/iOS build
+// Override with VITE_API_BASE_URL env variable for local development
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://skillsync-api-gnhz.onrender.com";
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000",
+  baseURL: API_BASE_URL,
 });
 
 // Attach JWT token to every request if it exists
