@@ -1,6 +1,6 @@
 # 🔄 SkillSync
 
-**Intelligent, Fair, and Transparent Internship & Project Matching**
+### Intelligent, Fair & Transparent Internship and Project Matching Platform
 
 [![Node.js](https://img.shields.io/badge/Node.js-v20_LTS-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
@@ -9,62 +9,52 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
----
-
 ## 🎯 Overview
 
-Traditional internship and project allocation systems rely on keyword matching and manual screening, which fail to accurately evaluate candidates' competencies. **SkillSync** solves this with an intelligent, explainable platform that:
+Traditional internship and project allocation systems rely on keyword matching and manual screening — failing to accurately evaluate what candidates can actually do. **SkillSync** solves this by replacing guesswork with data.
 
-- Evaluates candidates using **weighted skill competencies**
-- Generates a transparent **Match Score** with full skill-by-skill breakdown
-- Provides **gap guidance** — telling candidates exactly what to learn to become eligible
-- Gives recruiters a **ranked, data-driven candidate view** with one-click notifications
-- Parses resumes using **NLP-powered extraction** (spaCy + pdfminer)
+SkillSync is a full-stack web platform that intelligently matches candidates to internships and projects using **weighted skill competency scoring**, **NLP-powered resume parsing**, and a fully **transparent match breakdown** — so candidates always know exactly where they stand and what to improve.
 
 ---
 
-## 🌐 Live Demo
+## ✨ Features
 
-> **The application is live and deployed at:**
->
-> ### 🔗 [https://skill-sync-nine.vercel.app/](https://skill-sync-nine.vercel.app/)
->
-> Visit the link above to explore SkillSync in action. You can create an account and use the platform freely for **personal or testing purposes**.
+### For Candidates
+- 📄 **Smart Resume Parsing** — Upload a PDF resume; skills, projects, and experience are auto-extracted using spaCy NLP
+- 📊 **Match Score** — See a percentage score with a full skill-by-skill breakdown for every posting
+- 🎯 **Gap Guidance** — Get told exactly which skills to learn to become eligible
+- 🏆 **Transparent Rankings** — See where you rank among all applicants
+- 🔔 **Invite Notifications** — Accept or reject recruiter invitations in-app
 
----
-
-## ✨ Key Features
-
-| For Candidates                         | For Recruiters                       |
-| -------------------------------------- | ------------------------------------ |
-| 📄 Smart Resume Parsing (NLP)          | 📝 Post Internships & Projects       |
-| 📊 Match Score with skill breakdown    | 📈 Ranked candidate lists            |
-| 🎯 Gap guidance & learning suggestions | 🔔 One-click candidate notifications |
-| 🏆 Transparent rankings                | ✏️ Manage & edit postings            |
-| 🔔 Accept/Reject notifications         | 👤 Company profile management        |
+### For Recruiters
+- 📝 **Post Internships & Projects** — Create listings with required skills and custom weights
+- 📈 **Ranked Candidate Lists** — View candidates sorted by match score automatically
+- 🔔 **One-Click Notifications** — Send invites to top candidates instantly
+- ✏️ **Manage Postings** — Edit, update, or delete your listings anytime
+- 👤 **Company Profile** — Manage your company details and branding
 
 ---
 
-## 🏗 Architecture
+## 🏗️ Architecture
 
 ```
 ┌─────────────────────┐
-│   React/Vite SPA    │     TypeScript + Tailwind + Shadcn UI
+│   React/Vite SPA    │   TypeScript + Tailwind + Shadcn UI
 │   (port 8080)       │
 └────────┬────────────┘
          │ HTTP REST
          ▼
 ┌────────────────────────┐
-│  Node.js / Express API │     Express 5 + Prisma + Zod
+│  Node.js / Express API │   Express 5 + Prisma + Zod
 │  (port 5000)           │
 │  9 route modules       │
 └────────┬───────────────┘
-         │ Internal HTTP          ┌───────────────┐
-         ▼                        │  PostgreSQL   │
-┌────────────────────────┐        │  (10 models)  │
-│  Python / FastAPI      │        └───────▲───────┘
-│  (port 8000)           │                │
-│  Resume parsing + NLP  │            Prisma ORM
+         │ Internal HTTP        ┌───────────────┐
+         ▼                      │  PostgreSQL   │
+┌────────────────────────┐      │  (10 models)  │
+│  Python / FastAPI      │      └───────▲───────┘
+│  (port 8000)           │              │
+│  Resume parsing + NLP  │          Prisma ORM
 │  Score calculation     │
 └────────────────────────┘
 ```
@@ -73,13 +63,30 @@ Traditional internship and project allocation systems rely on keyword matching a
 
 ## 🔧 Tech Stack
 
-| Layer           | Technologies                                                                        |
-| --------------- | ----------------------------------------------------------------------------------- |
-| **Frontend**    | React 18, TypeScript, Vite 5, Tailwind CSS, Shadcn UI, React Router, TanStack Query |
-| **Backend API** | Node.js, Express 5, Prisma 5, PostgreSQL, JWT, bcrypt, Zod 4                        |
-| **NLP Service** | Python 3.11, FastAPI, spaCy, pdfminer.six, Custom Skill Taxonomy (200+ skills)      |
+| Layer | Technologies |
+|-------|-------------|
+| **Frontend** | React 18, TypeScript, Vite 5, Tailwind CSS, Shadcn UI, React Router, TanStack Query |
+| **Backend API** | Node.js, Express 5, Prisma 5, PostgreSQL, JWT, bcrypt, Zod 4 |
+| **NLP Service** | Python 3.11, FastAPI, spaCy, pdfminer.six, Custom Skill Taxonomy (200+ skills) |
 
-> See [frontend/README.md](frontend/README.md) and [backend/README.md](backend/README.md) for detailed documentation.
+---
+
+## 🧮 Match Score Algorithm
+
+```
+Score = (Σ candidate_proficiency × skill_weight) / (Σ 5 × skill_weight) × 100
+```
+
+| Required Skill | Weight | Candidate Proficiency | Contribution | Max |
+|----------------|--------|-----------------------|--------------|-----|
+| Python | 5 | 4 | 20 | 25 |
+| Django | 4 | 0 (missing) | 0 | 20 |
+| SQL | 3 | 3 | 9 | 15 |
+| **Total** | | | **29** | **60** |
+
+**Score = 48%** → Below 80% threshold → Gap guidance provided
+
+The system also expands skills using a built-in taxonomy (e.g. React → JavaScript, Flask → Python).
 
 ---
 
@@ -87,13 +94,13 @@ Traditional internship and project allocation systems rely on keyword matching a
 
 ### Prerequisites
 
-- **Node.js** v20+ &nbsp;|&nbsp; **Python** 3.11+ &nbsp;|&nbsp; **PostgreSQL**
+- **Node.js** v20+ | **Python** 3.11+ | **PostgreSQL**
 
 ### 1. Clone & Setup Database
 
 ```bash
-git clone git remote add origin  https://github.com/Kaustubh-Thallam/skill-sync.git
-cd SkillSync
+git clone https://github.com/YOUR_USERNAME/skillsync.git
+cd skillsync
 ```
 
 ```sql
@@ -105,20 +112,24 @@ CREATE DATABASE skillsync_dev;
 ```bash
 cd backend/node-service
 npm install
-# Configure .env (see backend/README.md for all variables)
-npx prisma db push && npx prisma generate
-npx prisma db seed    # Load sample data
-npm run dev            # → http://localhost:5000
+cp .env.example .env
+# Edit .env with your DATABASE_URL and JWT_SECRET
+npx prisma db push
+npx prisma generate
+npx prisma db seed
+npm run dev        # → http://localhost:5000
 ```
 
 ### 3. Python NLP Service
 
 ```bash
 cd backend/python-service
-python -m venv venv && venv\Scripts\activate
+python -m venv venv
+venv\Scripts\activate        # Windows
+# source venv/bin/activate   # macOS/Linux
 pip install -r requirements.txt
 python -m spacy download en_core_web_md
-python main.py         # → http://localhost:8000
+python main.py               # → http://localhost:8000
 ```
 
 ### 4. Frontend
@@ -127,70 +138,84 @@ python main.py         # → http://localhost:8000
 cd frontend
 npm install
 echo VITE_API_BASE_URL=http://localhost:5000 > .env
-npm run dev            # → http://localhost:8080
+npm run dev                  # → http://localhost:8080
 ```
-
----
-
-## 🧮 Match Score Algorithm
-
-```
-Score = (Σ candidate_proficiency × skill_weight) / (Σ 5 × skill_weight) × 100
-```
-
-| Required Skill | Weight | Candidate Proficiency | Contribution | Max    |
-| -------------- | ------ | --------------------- | ------------ | ------ |
-| Python         | 5      | 4                     | 20           | 25     |
-| Django         | 4      | 0 (missing)           | 0            | 20     |
-| SQL            | 3      | 3                     | 9            | 15     |
-| **Total**      |        |                       | **29**       | **60** |
-
-**Score = 48%** → Below 80% threshold → Gap guidance provided
-
-The system also expands skills using a taxonomy (e.g., Flask → Python, React → JavaScript).
 
 ---
 
 ## 🔑 Sample Credentials
 
-Run `npx prisma db seed` to populate sample data. **Password for all: `password123`**
+Run `npx prisma db seed` to populate sample data. **Password for all accounts: `password123`**
 
-| Role      | Email                    | Name/Company   |
-| --------- | ------------------------ | -------------- |
-| Candidate | alice@example.com        | Alice Johnson  |
-| Candidate | bob@example.com          | Bob Smith      |
-| Candidate | carol@example.com        | Carol Williams |
-| Recruiter | recruiter1@techcorp.com  | TechCorp       |
-| Recruiter | recruiter2@startupai.com | StartupAI      |
+| Role | Email | Name / Company |
+|------|-------|---------------|
+| Candidate | alice@example.com | Alice Johnson |
+| Candidate | bob@example.com | Bob Smith |
+| Candidate | carol@example.com | Carol Williams |
+| Recruiter | recruiter1@techcorp.com | TechCorp |
+| Recruiter | recruiter2@startupai.com | StartupAI |
 
 ---
 
 ## 📁 Project Structure
 
 ```
-synaptix26_DreamDevelopers/
-├── frontend/               # React + Vite SPA (see frontend/README.md)
-│   ├── src/pages/          # 19 pages (4 public + 8 candidate + 7 recruiter)
-│   ├── src/components/     # 10 custom + 49 Shadcn UI components
-│   └── public/favicon.svg  # App icon
+skillsync/
+├── frontend/                    # React + Vite SPA
+│   ├── src/
+│   │   ├── pages/               # 19 pages (public + candidate + recruiter + admin)
+│   │   ├── components/          # 10 custom + 49 Shadcn UI components
+│   │   ├── contexts/            # Auth context
+│   │   └── api/                 # Axios instance with interceptors
+│   └── public/
 ├── backend/
-│   ├── node-service/       # Express API (see backend/README.md)
-│   │   ├── src/routes/     # 9 route files, 25+ endpoints
-│   │   └── prisma/         # Schema (10 models) + seed data
-│   └── python-service/     # FastAPI NLP microservice
-│       ├── main.py         # Resume parsing + score calculation
-│       └── skill_taxonomy.py # 200+ skill mappings
-└── README.md               # This file
+│   ├── node-service/            # Express REST API
+│   │   ├── src/
+│   │   │   ├── routes/          # 9 route files, 25+ endpoints
+│   │   │   ├── middleware/      # JWT auth + rate limiting
+│   │   │   └── utils/          # JWT, error handling, Prisma client
+│   │   └── prisma/
+│   │       ├── schema.prisma    # 10 database models
+│   │       └── seed.js          # Sample data seeder
+│   └── python-service/          # FastAPI NLP microservice
+│       ├── main.py              # Resume parsing + score calculation
+│       └── skill_taxonomy.py    # 200+ skill mappings
+└── render.yaml                  # One-click Render deployment config
 ```
+
+---
+
+## 🌐 API Endpoints
+
+### Auth
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/auth/signup` | Register new user |
+| POST | `/auth/login` | Login → JWT token |
+| DELETE | `/auth/account` | Delete account |
+
+### Candidates
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/candidates/resume` | Upload PDF → NLP parsing |
+| GET | `/candidates/me` | Get profile + skills |
+| GET | `/candidates/recommendations` | Skill-based suggestions |
+
+### Scores & Applications
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/scores/check/:postingId` | Calculate match score |
+| POST | `/applications/:postingId` | Apply (score ≥ 80%) |
+| GET | `/rankings/:postingId` | Ranked candidate list |
 
 ---
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
 
 ---
@@ -201,6 +226,4 @@ This project is licensed under the MIT License.
 
 ---
 
-<p align="center">
-  Built with ❤️ by <strong>Dream Developers</strong>
-</p>
+<p align="center">Built with ❤️ by <strong>Dream Developers</strong></p>

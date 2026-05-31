@@ -19,7 +19,6 @@ interface AuthContextType {
     email: string,
     password: string,
     userType: "candidate" | "recruiter",
-    verifiedToken: string,
   ) => Promise<void>;
   logout: () => void;
   updateUserName: (name: string) => void;
@@ -70,10 +69,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     email: string,
     password: string,
     userType: "candidate" | "recruiter",
-    verifiedToken: string,
   ) => {
     const role = userType.toUpperCase(); // CANDIDATE or RECRUITER
-    const { data } = await api.post("/auth/signup", { email, password, role, verifiedToken });
+    const { data } = await api.post("/auth/signup", { email, password, role });
     const mappedUser: User = {
       id: data.user.id,
       fullName,

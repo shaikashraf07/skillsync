@@ -165,7 +165,7 @@ router.post(
       const pythonResponse = await axios.post(
         `${PYTHON_SERVICE_URL}/parse-resume`,
         formData,
-        { headers: formData.getHeaders(), timeout: 30000 },
+        { headers: formData.getHeaders(), timeout: 90000 },
       );
 
       res.json({
@@ -258,6 +258,21 @@ router.get(
     if (!profile) throw new ApiError(404, "Candidate profile not found.");
 
     res.json({ profile });
+  }),
+);
+
+// ─── GET /candidates/python-health ───
+// Proxy to Python service /health to wake it up (Render free-tier cold start)
+router.get(
+  "/python-health",
+  authenticate,
+  catchAsync(async (req, res) => {
+    try {
+      await axios.get(`${PYTHON_SERVICE_URL}/health`, { timeout: 90000 });
+      res.json({ status: "ready" });
+    } catch {
+      res.status(503).json({ status: "unavailable" });
+    }
   }),
 );
 

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   Loader2,
   AlertTriangle,
+  Wifi,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -67,6 +68,23 @@ const CandidateOnboarding = () => {
   const [uploaded, setUploaded] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState("");
+
+  // Python service warm-up state
+  const [pythonReady, setPythonReady] = useState<"idle" | "warming" | "ready" | "failed">("idle");
+
+  // Wake up Python service as soon as user enters resume mode
+  useEffect(() => {
+    if (mode === "resume" && pythonReady === "idle") {
+      setPythonReady("warming");
+      api
+        .get("/candidates/python-health")
+        .then(() => setPythonReady("ready"))
+        .catch(() => {
+          // Silently fail — the actual upload will still work with the 90s timeout
+          setPythonReady("failed");
+        });
+    }
+  }, [mode, pythonReady]);
 
   // Step 1 — Personal
   const [personal, setPersonal] = useState({
@@ -392,6 +410,27 @@ const CandidateOnboarding = () => {
               PDF only — we'll extract your details automatically
             </p>
           </div>
+
+          {/* Python service warm-up banner */}
+          {pythonReady === "warming" && (
+            <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+              <Loader2 className="h-4 w-4 animate-spin shrink-0 text-amber-600" />
+              <span>
+                <span className="font-semibold">Warming up AI parser…</span>{" "}
+                This takes a few seconds. You can select your file now.
+              </span>
+            </div>
+          )}
+          {pythonReady === "ready" && (
+            <div className="flex items-center gap-3 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-800">
+              <Wifi className="h-4 w-4 shrink-0 text-green-600" />
+              <span>
+                <span className="font-semibold">AI parser is ready!</span>{" "}
+                Go ahead and upload your resume.
+              </span>
+            </div>
+          )}
+
           <input
             type="file"
             ref={fileInputRef}
@@ -407,6 +446,9 @@ const CandidateOnboarding = () => {
               <>
                 <Loader2 className="h-12 w-12 mx-auto text-primary mb-4 animate-spin" />
                 <p className="font-medium">Parsing your resume…</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  This may take up to 60 seconds on first use
+                </p>
               </>
             ) : (
               <>
