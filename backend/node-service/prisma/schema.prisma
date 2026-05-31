@@ -154,13 +154,4 @@ model Notification {
   posting Posting? @relation(fields: [postingId], references: [id], onDelete: Cascade)
 }
 
-model PendingOtp {
-  id        String   @id @default(uuid())
-  email     String
-  otpHash   String
-  expiresAt DateTime
-  verified  Boolean  @default(false)
-  createdAt DateTime @default(now())
 
-  @@index([email])
-}

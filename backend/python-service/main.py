@@ -534,29 +534,6 @@ async def parse_resume(file: UploadFile = File(...)):
     linkedin_url = linkedin_match.group(0) if linkedin_match else None
 
     text_lower = raw_text.lower()
-    detected_skills = []
-    seen_skills = set()
-
-    for skill in KNOWN_SKILLS:
-        skill_lower = skill.lower()
-        pattern = r'\b' + re.escape(skill_lower) + r'\b'
-        if re.search(pattern, text_lower) and skill_lower not in seen_skills:
-            proficiency = _infer_proficiency(text_lower, skill_lower)
-            detected_skills.append({"skillName": skill_lower, "proficiency": proficiency})
-            seen_skills.add(skill_lower)
-
-    expanded_skills = expand_skills(detected_skills, min_proficiency=1)
-
-    # Mark skills with high confidence vs uncertain
-    high_confidence_skills = []
-    uncertain_skills = []
-    for s in expanded_skills:
-        # A skill is "certain" if it was directly detected in the resume
-        if s["skillName"] in seen_skills:
-            high_confidence_skills.append(s)
-        else:
-            # Inferred from taxonomy — mark as uncertain
-            uncertain_skills.append(s)
 
     # --- Section extraction ---
     sections = _extract_sections(raw_text)
@@ -564,12 +541,66 @@ async def parse_resume(file: UploadFile = File(...)):
     experience = _extract_experience(sections)
     education = _extract_education(sections)
 
+    # --- Skill extraction: prioritise the explicit Skills section ---
+    skills_section_text = ""
+    for key, content in sections.items():
+        if re.match(r'^(?:skills?|technical\s+skills?|core\s+skills?|key\s+skills?)$', key, re.IGNORECASE):
+            skills_section_text += " " + content
+
+    skills_section_lower = skills_section_text.lower()
+
+    # Skills explicitly listed in the Skills section → high confidence
+    section_skills = set()
+    for skill in KNOWN_SKILLS:
+        skill_lower = skill.lower()
+        pattern = r'\b' + re.escape(skill_lower) + r'\b'
+        if skills_section_lower and re.search(pattern, skills_section_lower):
+            section_skills.add(skill_lower)
+
+    # Skills found anywhere in the resume but NOT in the Skills section → uncertain
+    fulltext_only_skills = set()
+    for skill in KNOWN_SKILLS:
+        skill_lower = skill.lower()
+        if skill_lower in section_skills:
+            continue
+        pattern = r'\b' + re.escape(skill_lower) + r'\b'
+        if re.search(pattern, text_lower):
+            fulltext_only_skills.add(skill_lower)
+
+    # Build detected skill lists with proficiency
+    high_confidence_skills = []
+    for s in sorted(section_skills):
+        proficiency = _infer_proficiency(text_lower, s)
+        high_confidence_skills.append({"skillName": s, "proficiency": proficiency})
+
+    uncertain_skills = []
+    for s in sorted(fulltext_only_skills):
+        proficiency = _infer_proficiency(text_lower, s)
+        uncertain_skills.append({"skillName": s, "proficiency": proficiency})
+
+    # Combined list for backward compatibility
+    all_detected = high_confidence_skills + uncertain_skills
+    expanded_skills = expand_skills(all_detected, min_proficiency=1)
+
+    # Re-split expanded skills: only skills from Skills section are high-confidence
+    final_high = []
+    final_uncertain = []
+    for s in expanded_skills:
+        if s["skillName"] in section_skills:
+            final_high.append(s)
+        else:
+            final_uncertain.append(s)
+
+    print(f"[DEBUG] Skills section detected: {sorted(section_skills)}")
+    print(f"[DEBUG] Full-text only skills: {sorted(fulltext_only_skills)}")
+    print(f"[DEBUG] High confidence: {len(final_high)}, Uncertain: {len(final_uncertain)}")
+
     return {
         "name": name, "email": email, "phone": phone, "location": location,
         "linkedinUrl": linkedin_url,
         "skills": expanded_skills,
-        "highConfidenceSkills": high_confidence_skills,
-        "uncertainSkills": uncertain_skills,
+        "highConfidenceSkills": final_high,
+        "uncertainSkills": final_uncertain,
         "projects": projects,
         "experience": experience,
         "education": education,

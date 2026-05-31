@@ -113,7 +113,7 @@ app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
     error:
-      process.env.NODE_ENV === "production"
+      statusCode >= 500 && process.env.NODE_ENV === "production"
         ? "Internal server error"
         : err.message,
   });
