@@ -96,9 +96,19 @@ const Signup = () => {
         navigate("/onboarding/recruiter");
       }
     } catch (err: any) {
-      const msg =
-        err.response?.data?.error || "Signup failed. Please try again.";
-      toast.error(msg);
+      const status = err.response?.status;
+      const serverMsg = err.response?.data?.error;
+
+      if (status === 503 || (!err.response && err.code === "ERR_NETWORK")) {
+        toast.error("Server is starting up. Please wait a moment and try again.", {
+          duration: 6000,
+        });
+      } else if (status === 500) {
+        toast.error("Something went wrong on our end. Please try again.");
+      } else {
+        const msg = serverMsg || "Signup failed. Please try again.";
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, RefreshCw } from "lucide-react";
 
 const Login = () => {
   const { login, isAuthenticated, user } = useAuth();
@@ -13,6 +13,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [serverWaking, setServerWaking] = useState(false);
 
   // Redirect if already logged in
   if (isAuthenticated && user) {
@@ -28,6 +29,7 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setServerWaking(false);
     try {
       await login(email, password);
       const stored = localStorage.getItem("user");
@@ -41,9 +43,21 @@ const Login = () => {
       }
       toast.success("Welcome back!");
     } catch (err: any) {
-      const msg =
-        err.response?.data?.error || "Invalid credentials. Please try again.";
-      toast.error(msg);
+      const status = err.response?.status;
+      const serverMsg = err.response?.data?.error;
+
+      if (status === 503 || (!err.response && err.code === "ERR_NETWORK")) {
+        // Server is cold-starting (Render free tier) — show retry hint
+        setServerWaking(true);
+        toast.error("Server is starting up. Please wait a moment and try again.", {
+          duration: 6000,
+        });
+      } else if (status === 500) {
+        toast.error("Something went wrong on our end. Please try again.");
+      } else {
+        const msg = serverMsg || "Invalid credentials. Please try again.";
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -117,7 +131,12 @@ const Login = () => {
             >
               {loading ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Signing in…
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {serverWaking ? "Server starting…" : "Signing in…"}
+                </>
+              ) : serverWaking ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2" /> Retry Sign In
                 </>
               ) : (
                 "Sign In"

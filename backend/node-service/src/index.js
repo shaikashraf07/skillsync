@@ -89,15 +89,35 @@ app.use((err, req, res, next) => {
       })),
     });
   }
+
+  // Prisma: unique constraint violation
   if (err.code === "P2002") {
     return res.status(409).json({
       error: "A record with this data already exists.",
       field: err.meta?.target,
     });
   }
+  // Prisma: record not found
   if (err.code === "P2025") {
     return res.status(404).json({ error: "Record not found." });
   }
+  // Prisma: database connection / initialization errors (e.g. Render cold start)
+  if (
+    err.name === "PrismaClientInitializationError" ||
+    err.name === "PrismaClientRustPanicError" ||
+    err.code === "P1001" || // Can't reach DB server
+    err.code === "P1008" || // DB operation timed out
+    err.code === "P1017"    // Server has closed the connection
+  ) {
+    console.error(
+      `[DB] ${new Date().toISOString()} - Database connection error on ${req.method} ${req.path}:`,
+      err.message,
+    );
+    return res.status(503).json({
+      error: "Service temporarily unavailable. Please try again in a moment.",
+    });
+  }
+
   if (err.code === "LIMIT_FILE_SIZE") {
     return res
       .status(400)
