@@ -71,20 +71,36 @@ const CandidateOnboarding = () => {
 
   // Python service warm-up state
   const [pythonReady, setPythonReady] = useState<"idle" | "warming" | "ready" | "failed">("idle");
+  const [warmupAttempt, setWarmupAttempt] = useState(0);
+  const MAX_WARMUP_ATTEMPTS = 20; // 20 × 5s = 100s max
 
-  // Wake up Python service as soon as user enters resume mode
+  // Poll Python service until it's ready — retry every 5s
   useEffect(() => {
-    if (mode === "resume" && pythonReady === "idle") {
+    if (mode !== "resume" || pythonReady === "ready") return;
+    if (pythonReady === "idle") {
       setPythonReady("warming");
+      setWarmupAttempt(0);
+    }
+    if (pythonReady === "failed") return; // stopped — user must click Retry
+
+    const timer = setTimeout(() => {
       api
         .get("/candidates/python-health")
-        .then(() => setPythonReady("ready"))
+        .then(() => {
+          setPythonReady("ready");
+        })
         .catch(() => {
-          // Silently fail — the actual upload will still work with the 90s timeout
-          setPythonReady("failed");
+          const next = warmupAttempt + 1;
+          setWarmupAttempt(next);
+          if (next >= MAX_WARMUP_ATTEMPTS) {
+            setPythonReady("failed");
+          }
+          // else stay "warming" — useEffect re-runs on warmupAttempt change
         });
-    }
-  }, [mode, pythonReady]);
+    }, warmupAttempt === 0 ? 0 : 5000); // first attempt immediately
+
+    return () => clearTimeout(timer);
+  }, [mode, pythonReady, warmupAttempt]);
 
   // Step 1 — Personal
   const [personal, setPersonal] = useState({
@@ -164,6 +180,14 @@ const CandidateOnboarding = () => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Guard: block upload if Python service not confirmed ready
+    if (pythonReady !== "ready") {
+      toast.error("AI parser is still warming up. Please wait a moment and try again.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
     setFileName(file.name);
     setUploading(true);
 
@@ -172,6 +196,7 @@ const CandidateOnboarding = () => {
       formData.append("resume", file);
       const { data } = await api.post("/candidates/resume", formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        timeout: 120000, // 2 minutes — Python cold start can take up to 90s
       });
       const parsed = data.parsed;
 
@@ -246,10 +271,14 @@ const CandidateOnboarding = () => {
         );
       }
     } catch (err: any) {
-      toast.error(
-        err.response?.data?.error ||
-          "Failed to parse resume. Try manual entry.",
-      );
+      const errMsg = err.response?.data?.error || err.response?.data?.detail;
+      if (err.code === "ECONNABORTED" || err.message?.includes("timeout")) {
+        toast.error("Resume parsing timed out. The AI service may be busy — please try uploading again.");
+      } else if (err.response?.status === 503) {
+        toast.error("AI parser is temporarily unavailable. Please wait 30 seconds and try again.");
+      } else {
+        toast.error(errMsg || "Failed to parse resume. Please try again or use manual entry.");
+      }
       // Reset file input so re-upload works
       if (fileInputRef.current) fileInputRef.current.value = "";
     } finally {
@@ -396,6 +425,10 @@ const CandidateOnboarding = () => {
 
   // Mode: Resume upload
   if (mode === "resume" && !uploaded) {
+    const isReady = pythonReady === "ready";
+    const isFailed = pythonReady === "failed";
+    const warmupPct = Math.min(100, Math.round((warmupAttempt / MAX_WARMUP_ATTEMPTS) * 100));
+
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="w-full max-w-lg space-y-8 animate-fade-in">
@@ -413,21 +446,49 @@ const CandidateOnboarding = () => {
 
           {/* Python service warm-up banner */}
           {pythonReady === "warming" && (
-            <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
-              <Loader2 className="h-4 w-4 animate-spin shrink-0 text-amber-600" />
-              <span>
-                <span className="font-semibold">Warming up AI parser…</span>{" "}
-                This takes a few seconds. You can select your file now.
-              </span>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+                <Loader2 className="h-4 w-4 animate-spin shrink-0 text-amber-600" />
+                <div className="flex-1">
+                  <span className="font-semibold">Warming up AI parser…</span>{" "}
+                  <span>Please wait, this can take up to 60 seconds.</span>
+                </div>
+              </div>
+              {/* Progress bar */}
+              <div className="w-full h-1.5 bg-amber-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-amber-400 rounded-full transition-all duration-500"
+                  style={{ width: `${warmupPct}%` }}
+                />
+              </div>
+              <p className="text-xs text-amber-600 text-right">Attempt {warmupAttempt + 1} of {MAX_WARMUP_ATTEMPTS}</p>
             </div>
           )}
-          {pythonReady === "ready" && (
+          {isReady && (
             <div className="flex items-center gap-3 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-800">
               <Wifi className="h-4 w-4 shrink-0 text-green-600" />
               <span>
                 <span className="font-semibold">AI parser is ready!</span>{" "}
                 Go ahead and upload your resume.
               </span>
+            </div>
+          )}
+          {isFailed && (
+            <div className="flex items-start gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800">
+              <AlertTriangle className="h-5 w-5 shrink-0 text-red-600 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-semibold">AI parser could not start</p>
+                <p className="mt-0.5">The service may be overloaded. You can retry or use manual entry.</p>
+                <button
+                  className="mt-2 text-xs font-semibold underline text-red-700 hover:text-red-900"
+                  onClick={() => {
+                    setWarmupAttempt(0);
+                    setPythonReady("warming");
+                  }}
+                >
+                  Retry warm-up
+                </button>
+              </div>
             </div>
           )}
 
@@ -439,22 +500,26 @@ const CandidateOnboarding = () => {
             onChange={handleFileUpload}
           />
           <div
-            className="border-2 border-dashed border-border rounded-xl p-12 text-center hover:border-primary transition-colors cursor-pointer bg-card"
-            onClick={() => !uploading && fileInputRef.current?.click()}
+            className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors bg-card ${
+              isReady && !uploading
+                ? "border-primary hover:border-primary/70 cursor-pointer"
+                : "border-border opacity-60 cursor-not-allowed"
+            }`}
+            onClick={() => isReady && !uploading && fileInputRef.current?.click()}
           >
             {uploading ? (
               <>
                 <Loader2 className="h-12 w-12 mx-auto text-primary mb-4 animate-spin" />
                 <p className="font-medium">Parsing your resume…</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  This may take up to 60 seconds on first use
+                  This may take up to 2 minutes on first use
                 </p>
               </>
             ) : (
               <>
-                <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <Upload className={`h-12 w-12 mx-auto mb-4 ${isReady ? "text-primary" : "text-muted-foreground"}`} />
                 <p className="font-medium">
-                  Drop your resume here or click to upload
+                  {isReady ? "Drop your resume here or click to upload" : "Waiting for AI parser to be ready…"}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
                   PDF only (max 5MB)

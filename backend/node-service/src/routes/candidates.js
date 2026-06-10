@@ -165,7 +165,7 @@ router.post(
       const pythonResponse = await axios.post(
         `${PYTHON_SERVICE_URL}/parse-resume`,
         formData,
-        { headers: formData.getHeaders(), timeout: 90000 },
+        { headers: formData.getHeaders(), timeout: 120000 }, // 2 min — cold start can take ~70s
       );
 
       res.json({
@@ -173,14 +173,22 @@ router.post(
         parsed: pythonResponse.data,
       });
     } catch (err) {
-      if (err.response)
+      if (err.response) {
         throw new ApiError(
           err.response.status,
           err.response.data.detail || "Resume parsing failed.",
         );
+      }
+      // Axios timeout or connection error
+      if (err.code === "ECONNABORTED" || err.code === "ETIMEDOUT") {
+        throw new ApiError(
+          504,
+          "Resume parsing timed out. The AI service is waking up — please try again in 30 seconds.",
+        );
+      }
       throw new ApiError(
         503,
-        "Resume parsing service temporarily unavailable.",
+        "Resume parsing service temporarily unavailable. Please try again in a moment.",
       );
     }
   }),
