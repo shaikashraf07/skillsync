@@ -12,9 +12,14 @@ const router = express.Router();
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for mobile uploads
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === "application/pdf") cb(null, true);
+    const isPdf =
+      file.mimetype === "application/pdf" ||
+      file.mimetype === "application/x-pdf" ||
+      file.mimetype === "application/octet-stream" ||
+      (file.originalname && file.originalname.toLowerCase().endsWith(".pdf"));
+    if (isPdf) cb(null, true);
     else cb(new ApiError(400, "Only PDF files are allowed."));
   },
 });
