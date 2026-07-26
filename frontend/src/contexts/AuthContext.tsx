@@ -50,7 +50,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAuthenticated = !!token && !!user;
 
   const login = async (email: string, password: string) => {
-    const { data } = await api.post("/auth/login", { email, password });
+    const cleanEmail = email.trim().toLowerCase();
+    const { data } = await api.post("/auth/login", { email: cleanEmail, password });
     const mappedUser: User = {
       id: data.user.id,
       fullName: data.user.displayName || data.user.email.split("@")[0],
@@ -70,8 +71,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     password: string,
     userType: "candidate" | "recruiter",
   ) => {
+    const cleanEmail = email.trim().toLowerCase();
     const role = userType.toUpperCase(); // CANDIDATE or RECRUITER
-    const { data } = await api.post("/auth/signup", { email, password, role });
+    const { data } = await api.post("/auth/signup", { email: cleanEmail, password, role });
     const mappedUser: User = {
       id: data.user.id,
       fullName,

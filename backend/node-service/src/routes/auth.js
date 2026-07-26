@@ -43,9 +43,10 @@ router.post(
   signupLimiter,
   catchAsync(async (req, res) => {
     const data = signupSchema.parse(req.body);
+    const email = data.email.trim().toLowerCase();
 
     const existing = await prisma.user.findUnique({
-      where: { email: data.email },
+      where: { email },
     });
     if (existing) {
       throw new ApiError(409, "An account with this email already exists.");
@@ -55,7 +56,7 @@ router.post(
 
     const user = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
-        data: { email: data.email, passwordHash, role: data.role },
+        data: { email, passwordHash, role: data.role },
       });
 
       if (data.role === "CANDIDATE") {
@@ -88,9 +89,10 @@ router.post(
   loginLimiter,
   catchAsync(async (req, res) => {
     const data = loginSchema.parse(req.body);
+    const email = data.email.trim().toLowerCase();
 
     const user = await prisma.user.findUnique({
-      where: { email: data.email },
+      where: { email },
       include: {
         candidateProfile: { select: { name: true, onboarded: true } },
         recruiterProfile: { select: { companyName: true, onboarded: true } },
