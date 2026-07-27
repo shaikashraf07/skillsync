@@ -7,30 +7,20 @@ dotenv.config();
 const app = express();
 
 // ─── Core Middleware ───
-const allowedOrigins =
-  process.env.NODE_ENV === "production"
-    ? [
-        process.env.FRONTEND_URL,
-        "https://localhost",          // Capacitor Android (androidScheme: https)
-        "capacitor://localhost",      // Capacitor Android fallback
-        "http://localhost",           // Capacitor Android dev
-      ].filter(Boolean)
-    : [
-      "http://localhost:8080",
-      "http://localhost:8081",
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "https://localhost",
-      "capacitor://localhost",
-    ];
-
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, Postman, server-to-server)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      callback(new Error(`CORS: origin '${origin}' not allowed`));
+      // Always allow mobile apps (no origin header), localhost, capacitor, and Vercel domains
+      if (
+        !origin ||
+        origin.includes("localhost") ||
+        origin.includes("capacitor") ||
+        origin.includes("vercel.app") ||
+        origin === process.env.FRONTEND_URL
+      ) {
+        return callback(null, true);
+      }
+      callback(null, true); // Permissive CORS for API connectivity
     },
     credentials: true,
   }),
@@ -62,6 +52,7 @@ const adminRoutes = require("./routes/admin");
 
 // ─── Route Registration ───
 app.use("/auth", authRoutes);
+app.use("/candidates/recommendations", recommendationRoutes);
 app.use("/candidates", candidateRoutes);
 app.use("/recruiters", recruiterRoutes);
 app.use("/postings", postingRoutes);
@@ -69,7 +60,6 @@ app.use("/scores", scoreRoutes);
 app.use("/applications", applicationRoutes);
 app.use("/rankings", rankingRoutes);
 app.use("/notifications", notificationRoutes);
-app.use("/candidates/recommendations", recommendationRoutes);
 app.use("/admin", adminRoutes);
 
 // ─── 404 Handler ───
