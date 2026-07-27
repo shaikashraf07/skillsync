@@ -91,10 +91,11 @@ app.use((err, req, res, next) => {
   if (err.code === "P2025") {
     return res.status(404).json({ error: "Record not found." });
   }
-  // Prisma: database connection / initialization errors (e.g. Render cold start)
+  // Prisma: database connection / initialization errors
   if (
     err.name === "PrismaClientInitializationError" ||
     err.name === "PrismaClientRustPanicError" ||
+    err.name === "PrismaClientUnknownRequestError" ||
     err.code === "P1001" || // Can't reach DB server
     err.code === "P1008" || // DB operation timed out
     err.code === "P1017"    // Server has closed the connection
@@ -104,7 +105,7 @@ app.use((err, req, res, next) => {
       err.message,
     );
     return res.status(503).json({
-      error: "Service temporarily unavailable. Please try again in a moment.",
+      error: "Database is connecting. Please wait a few seconds and try again.",
     });
   }
 
@@ -116,16 +117,17 @@ app.use((err, req, res, next) => {
 
   console.error(
     `[ERROR] ${new Date().toISOString()} - ${req.method} ${req.path}:`,
-    err.message,
+    err.message || err,
   );
-  if (process.env.NODE_ENV === "development") console.error(err.stack);
+  if (err.stack) console.error(err.stack);
 
-  const statusCode = err.statusCode || 500;
+  const statusCode = err.statusCode || (err.status ? err.status : 500);
+  const clientMessage = err.isOperational
+    ? err.message
+    : (statusCode < 500 ? err.message : "Internal server error. Please try again.");
+
   res.status(statusCode).json({
-    error:
-      statusCode >= 500 && process.env.NODE_ENV === "production"
-        ? "Internal server error"
-        : err.message,
+    error: clientMessage,
   });
 });
 
