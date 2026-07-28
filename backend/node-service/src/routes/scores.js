@@ -9,6 +9,55 @@ const router = express.Router();
 const PYTHON_SERVICE_URL =
   process.env.PYTHON_SERVICE_URL || "http://localhost:8000";
 
+/**
+ * Local score calculation engine used when Python microservice is offline or sleeping
+ */
+function calculateScoreLocally(candidateSkills, postingSkills) {
+  const skillLookup = {};
+  candidateSkills.forEach((s) => {
+    if (s.skillName) {
+      skillLookup[s.skillName.toLowerCase().trim()] = s.proficiency || 1;
+    }
+  });
+
+  let earned = 0;
+  let maxPossible = 0;
+  const breakdown = [];
+  const gaps = [];
+
+  postingSkills.forEach((ps) => {
+    const psName = (ps.skillName || "").toLowerCase().trim();
+    const weight = ps.weight || 1;
+    maxPossible += 5 * weight;
+
+    const candidateProf = skillLookup[psName] || 0;
+    const matched = candidateProf > 0;
+    const contribution = candidateProf * weight;
+    earned += contribution;
+
+    breakdown.push({
+      skillName: ps.skillName,
+      weight,
+      candidateProficiency: candidateProf,
+      contribution,
+      maxContribution: 5 * weight,
+      matched,
+    });
+
+    if (!matched || candidateProf < 3) {
+      gaps.push({
+        skillName: ps.skillName,
+        currentProficiency: candidateProf,
+        requiredWeight: weight,
+        suggestions: [],
+      });
+    }
+  });
+
+  const score = maxPossible > 0 ? Math.round((earned / maxPossible) * 100 * 100) / 100 : 0;
+  return { score, breakdown, gaps, projectedScore: score };
+}
+
 // ─── POST /scores/check/:postingId ───
 router.post(
   "/check/:postingId",
@@ -22,10 +71,10 @@ router.post(
       include: { skills: true },
     });
     if (!profile) throw new ApiError(404, "Candidate profile not found.");
-    if (profile.skills.length === 0)
+    if (!profile.skills || profile.skills.length === 0)
       throw new ApiError(
         400,
-        "No skills found. Add skills to your profile first.",
+        "No skills found. Please add skills to your profile first to check eligibility.",
       );
 
     const posting = await prisma.posting.findUnique({
@@ -33,7 +82,7 @@ router.post(
       include: { postingSkills: true },
     });
     if (!posting) throw new ApiError(404, "Posting not found.");
-    if (posting.postingSkills.length === 0)
+    if (!posting.postingSkills || posting.postingSkills.length === 0)
       throw new ApiError(400, "This posting has no required skills.");
 
     // Check cache
@@ -51,6 +100,9 @@ router.post(
       });
     }
 
+    let calculationResult = null;
+
+    // 1. Try Python microservice
     try {
       const pythonResponse = await axios.post(
         `${PYTHON_SERVICE_URL}/calculate-score`,
@@ -64,48 +116,50 @@ router.post(
             weight: s.weight,
           })),
         },
-        { timeout: 15000 },
+        { timeout: 8000 },
       );
 
-      const { score, breakdown, gaps, projectedScore } = pythonResponse.data;
+      calculationResult = pythonResponse.data;
+    } catch (err) {
+      console.warn(
+        `[SCORING] Python service unavailable (${err.message}). Falling back to local score calculation.`,
+      );
+      // 2. Fallback to local calculation engine
+      calculationResult = calculateScoreLocally(profile.skills, posting.postingSkills);
+    }
 
-      const savedScore = await prisma.matchScore.upsert({
-        where: {
-          candidateId_postingId: { candidateId: profile.id, postingId },
-        },
-        update: {
-          score,
-          breakdown,
-          gaps,
-          isStale: false,
-          calculatedAt: new Date(),
-        },
-        create: {
-          candidateId: profile.id,
-          postingId,
-          score,
-          breakdown,
-          gaps,
-          isStale: false,
-        },
-      });
+    const { score, breakdown, gaps, projectedScore } = calculationResult;
 
-      res.json({
-        source: "calculated",
-        score: savedScore.score,
+    // Save/upsert score in PostgreSQL
+    const savedScore = await prisma.matchScore.upsert({
+      where: {
+        candidateId_postingId: { candidateId: profile.id, postingId },
+      },
+      update: {
+        score,
         breakdown,
         gaps,
-        projectedScore,
-        calculatedAt: savedScore.calculatedAt,
-      });
-    } catch (err) {
-      if (err.response)
-        throw new ApiError(
-          err.response.status,
-          err.response.data.detail || "Score calculation failed.",
-        );
-      throw new ApiError(503, "Scoring service temporarily unavailable.");
-    }
+        isStale: false,
+        calculatedAt: new Date(),
+      },
+      create: {
+        candidateId: profile.id,
+        postingId,
+        score,
+        breakdown,
+        gaps,
+        isStale: false,
+      },
+    });
+
+    res.json({
+      source: "calculated",
+      score: savedScore.score,
+      breakdown,
+      gaps,
+      projectedScore: projectedScore || savedScore.score,
+      calculatedAt: savedScore.calculatedAt,
+    });
   }),
 );
 

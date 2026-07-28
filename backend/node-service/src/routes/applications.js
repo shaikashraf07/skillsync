@@ -33,14 +33,47 @@ router.post(
     if (existingApp && !existingApp.withdrawn)
       throw new ApiError(409, "You have already applied.");
 
-    const matchScore = await prisma.matchScore.findUnique({
+    let matchScore = await prisma.matchScore.findUnique({
       where: { candidateId_postingId: { candidateId: profile.id, postingId } },
     });
-    if (!matchScore)
-      throw new ApiError(
-        400,
-        "Check your score first via POST /scores/check/:postingId",
-      );
+
+    if (!matchScore) {
+      // Auto-calculate score inline if user applies directly
+      const candidateProfile = await prisma.candidateProfile.findUnique({
+        where: { id: profile.id },
+        include: { skills: true },
+      });
+      const postingWithSkills = await prisma.posting.findUnique({
+        where: { id: postingId },
+        include: { postingSkills: true },
+      });
+
+      const candSkills = candidateProfile?.skills || [];
+      const postSkills = postingWithSkills?.postingSkills || [];
+
+      const skillMap = {};
+      candSkills.forEach((s) => {
+        if (s.skillName) skillMap[s.skillName.toLowerCase().trim()] = s.proficiency || 1;
+      });
+
+      let earned = 0;
+      let maxPossible = 0;
+      postSkills.forEach((ps) => {
+        const psName = (ps.skillName || "").toLowerCase().trim();
+        const weight = ps.weight || 1;
+        maxPossible += 5 * weight;
+        earned += (skillMap[psName] || 0) * weight;
+      });
+
+      const computedScore = maxPossible > 0 ? Math.round((earned / maxPossible) * 100 * 100) / 100 : 0;
+
+      matchScore = await prisma.matchScore.upsert({
+        where: { candidateId_postingId: { candidateId: profile.id, postingId } },
+        update: { score: computedScore, isStale: false, calculatedAt: new Date() },
+        create: { candidateId: profile.id, postingId, score: computedScore, isStale: false },
+      });
+    }
+
     if (matchScore.score < SCORE_THRESHOLD) {
       throw new ApiError(
         403,
