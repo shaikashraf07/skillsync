@@ -30,9 +30,10 @@ jobs:
           cd SkillSyncAppium
           npm install
 
-      - name: Execute Appium 1,111 E2E Test Suite & Generate Excel/HTML Reports
+      - name: Execute Appium 800 E2E Test Suite & Generate Excel/HTML Reports
         run: |
           cd SkillSyncAppium
+          mkdir -p reports
           node scripts/run_appium_tests.js | tee reports/test-output.log
 
       - name: Upload Excel Analysis Report Artifact
@@ -40,6 +41,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: excel-analysis-report
+          if-no-files-found: ignore
           path: |
             SkillSync_Appium_Mobile_E2E_Report.xlsx
             SkillSyncAppium/reports/appium-test-report.xlsx
@@ -49,6 +51,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: html-pytest-report
+          if-no-files-found: ignore
           path: SkillSyncAppium/reports/execution-report.html
 
       - name: Upload Test Output Log Artifact
@@ -56,6 +59,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-output-log
+          if-no-files-found: ignore
           path: SkillSyncAppium/reports/test-output.log
+
 
 
