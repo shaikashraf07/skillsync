@@ -25,16 +25,22 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Appium & Dependencies
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python & Appium Dependencies
         run: |
+          pip install openpyxl pytest
           cd SkillSyncAppium
           npm install
 
-      - name: Execute Appium 800 E2E Test Suite & Generate Excel/HTML Reports
+      - name: Execute Pytest E2E Test Suite & Generate Excel/HTML Reports
         run: |
           cd SkillSyncAppium
           mkdir -p reports
-          node scripts/run_appium_tests.js | tee reports/test-output.log
+          python run_pytest_suite.py | tee reports/test-output.log
 
       - name: Upload Excel Analysis Report Artifact
         if: always()

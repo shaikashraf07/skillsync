@@ -5,7 +5,8 @@
   "main": "wdio.conf.js",
   "scripts": {
     "test": "wdio run wdio.conf.js",
-    "test:mega": "node scripts/run_appium_tests.js",
+    "test:mega": "python run_pytest_suite.py",
+    "test:pytest": "python run_pytest_suite.py",
     "report:excel": "node utils/xlsxReporter.js",
     "report:html": "node utils/generateHtmlReport.js"
   },
