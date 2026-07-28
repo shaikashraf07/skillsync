@@ -1,0 +1,46 @@
+name: Android Appium Mobile E2E Testing
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  appium-test:
+    name: Run 1,111 Mobile Appium E2E Tests & Publish Excel Reports
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Appium & Dependencies
+        run: |
+          cd SkillSyncAppium
+          npm install
+
+      - name: Execute Appium 1,111 E2E Test Suite & Generate Excel/HTML Reports
+        run: |
+          cd SkillSyncAppium
+          node scripts/run_appium_tests.js
+
+      - name: Upload Appium Excel & HTML Test Reports Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: appium-mobile-excel-reports
+          path: |
+            SkillSync_Appium_Mobile_E2E_Report.xlsx
+            SkillSyncAppium/reports/appium-test-report.xlsx
+            SkillSyncAppium/reports/execution-report.html
+
