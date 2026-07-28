@@ -47,7 +47,7 @@ app.head("/health", healthHandler);
 // ─── Global Rate Limiter ───
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 500,
   message: "Too many requests from this IP, please try again later.",
 });
 app.use(globalLimiter);
@@ -78,7 +78,7 @@ app.use("/admin", adminRoutes);
 
 // ─── 404 Handler ───
 app.use((req, res) => {
-  res.status(404).json({ error: `Route ${req.method} ${req.path} not found.` });
+  res.status(404).json({ status: "error", error: `Route ${req.method} ${req.path} not found.` });
 });
 
 // ─── Global Error Handler ───
@@ -86,6 +86,7 @@ app.use((err, req, res, next) => {
   if (err.name === "ZodError") {
     const issues = err.issues || err.errors || [];
     return res.status(400).json({
+      status: "error",
       error: "Validation failed",
       details: issues.map((e) => ({
         field: (e.path || []).join("."),
@@ -97,13 +98,14 @@ app.use((err, req, res, next) => {
   // Prisma: unique constraint violation
   if (err.code === "P2002") {
     return res.status(409).json({
+      status: "error",
       error: "A record with this data already exists.",
       field: err.meta?.target,
     });
   }
   // Prisma: record not found
   if (err.code === "P2025") {
-    return res.status(404).json({ error: "Record not found." });
+    return res.status(404).json({ status: "error", error: "Record not found." });
   }
   // Prisma: database connection / initialization errors
   if (
@@ -119,6 +121,7 @@ app.use((err, req, res, next) => {
       err.message,
     );
     return res.status(503).json({
+      status: "error",
       error: "Database is connecting. Please wait a few seconds and try again.",
     });
   }
@@ -126,7 +129,7 @@ app.use((err, req, res, next) => {
   if (err.code === "LIMIT_FILE_SIZE") {
     return res
       .status(400)
-      .json({ error: "File too large. Maximum size is 5MB." });
+      .json({ status: "error", error: "File too large. Maximum size is 5MB." });
   }
 
   console.error(
@@ -141,6 +144,7 @@ app.use((err, req, res, next) => {
     : (statusCode < 500 ? err.message : "Internal server error. Please try again.");
 
   res.status(statusCode).json({
+    status: "error",
     error: clientMessage,
   });
 });

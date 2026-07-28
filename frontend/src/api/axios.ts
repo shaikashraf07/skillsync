@@ -19,7 +19,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Auto-logout on 401 (expired/invalid token)
+// Auto-logout on 401 (expired/invalid token) and format 500 server errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -34,6 +34,14 @@ api.interceptors.response.use(
         window.location.href = "/login";
       }
     }
+    
+    // Standardize error message property for UI error display
+    if (error.response?.data?.error) {
+      error.message = error.response.data.error;
+    } else if (error.response?.status >= 500) {
+      error.message = "Server is starting up or temporarily busy. Please try again in a few seconds.";
+    }
+    
     return Promise.reject(error);
   },
 );
