@@ -3,6 +3,7 @@ class ApiError extends Error {
     super(message);
     this.statusCode = statusCode;
     this.name = "ApiError";
+    this.isOperational = true;
   }
 }
 

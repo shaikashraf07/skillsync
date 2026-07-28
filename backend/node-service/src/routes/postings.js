@@ -148,6 +148,8 @@ router.put(
     const recruiterProfile = await prisma.recruiterProfile.findUnique({
       where: { userId: req.user.id },
     });
+    if (!recruiterProfile)
+      throw new ApiError(404, "Recruiter profile not found.");
 
     const posting = await prisma.posting.findUnique({
       where: { id: req.params.id },
@@ -210,6 +212,9 @@ router.delete(
     const recruiterProfile = await prisma.recruiterProfile.findUnique({
       where: { userId: req.user.id },
     });
+    if (!recruiterProfile)
+      throw new ApiError(404, "Recruiter profile not found.");
+
     const posting = await prisma.posting.findUnique({
       where: { id: req.params.id },
     });

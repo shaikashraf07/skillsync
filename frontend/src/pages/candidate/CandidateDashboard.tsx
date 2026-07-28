@@ -143,7 +143,7 @@ const CandidateDashboard = () => {
               skills to get personalized internship and project matches.
             </p>
             <Link
-              to="/dashboard/candidate/profile"
+              to="/profile/candidate"
               className="inline-flex items-center gap-2 px-6 py-2.5 bg-retro-charcoal text-retro-cream rounded-xl font-semibold text-sm hover:bg-retro-olive transition-colors"
             >
               <Sparkles className="h-4 w-4" />

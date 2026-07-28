@@ -1,12 +1,18 @@
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
 const dotenv = require("dotenv");
+const rateLimit = require("./middleware/rateLimit");
 
 dotenv.config();
 
 const app = express();
 
-// ─── Core Middleware ───
+// Trust proxy for Render/reverse proxy environments
+app.set("trust proxy", 1);
+
+// ─── Security Middleware ───
+app.use(helmet());
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -16,18 +22,18 @@ app.use(
         origin.includes("localhost") ||
         origin.includes("capacitor") ||
         origin.includes("vercel.app") ||
-        origin === process.env.FRONTEND_URL
+        (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL)
       ) {
         return callback(null, true);
       }
-      callback(null, true); // Permissive CORS for API connectivity
+      callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   }),
 );
 app.use(express.json({ limit: "10mb" }));
 
-// ─── Health Check ───
+// ─── Health Check (before rate limiting) ───
 const healthHandler = (req, res) => {
   res.json({
     status: "ok",
@@ -37,6 +43,14 @@ const healthHandler = (req, res) => {
 };
 app.get("/health", healthHandler);
 app.head("/health", healthHandler);
+
+// ─── Global Rate Limiter ───
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: "Too many requests from this IP, please try again later.",
+});
+app.use(globalLimiter);
 
 // ─── Route Imports ───
 const authRoutes = require("./routes/auth");
