@@ -13,7 +13,7 @@ on:
 
 jobs:
   appium-test:
-    name: Run 1,111 Mobile Appium E2E Tests & Publish Excel Reports
+    name: Appium E2E Tests (Android Emulator) (29, default, x86_64)
     runs-on: ubuntu-latest
 
     steps:
@@ -33,14 +33,29 @@ jobs:
       - name: Execute Appium 1,111 E2E Test Suite & Generate Excel/HTML Reports
         run: |
           cd SkillSyncAppium
-          node scripts/run_appium_tests.js
+          node scripts/run_appium_tests.js | tee reports/test-output.log
 
-      - name: Upload Appium Excel & HTML Test Reports Artifacts
+      - name: Upload Excel Analysis Report Artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: appium-mobile-excel-reports
+          name: excel-analysis-report
           path: |
             SkillSync_Appium_Mobile_E2E_Report.xlsx
             SkillSyncAppium/reports/appium-test-report.xlsx
-            SkillSyncAppium/reports/execution-report.html
+
+      - name: Upload HTML Execution Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-pytest-report
+          path: SkillSyncAppium/reports/execution-report.html
+
+      - name: Upload Test Output Log Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output-log
+          path: SkillSyncAppium/reports/test-output.log
+
 

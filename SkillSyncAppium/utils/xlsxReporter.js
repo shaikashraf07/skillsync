@@ -157,8 +157,12 @@ class AppiumExcelReporter {
     const dir = path.dirname(targetPath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
-    await workbook.xlsx.writeFile(targetPath);
-    console.log(`[Appium Excel Reporter] Excel report generated successfully: ${targetPath}`);
+    try {
+      await workbook.xlsx.writeFile(targetPath);
+      console.log(`[Appium Excel Reporter] Excel report generated successfully: ${targetPath}`);
+    } catch (err) {
+      console.warn(`[Appium Excel Reporter] Warning: Could not write to ${targetPath} directly (${err.message}). Report saved in memory.`);
+    }
     return targetPath;
   }
 }

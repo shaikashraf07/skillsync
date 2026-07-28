@@ -38,7 +38,11 @@ async function runMegaAppiumSuite() {
   // Sync to root project directory for quick access
   const rootExcelPath = path.join(__dirname, '../../SkillSync_Appium_Mobile_E2E_Report.xlsx');
   const fs = require('fs');
-  fs.copyFileSync(excelPath, rootExcelPath);
+  try {
+    fs.copyFileSync(excelPath, rootExcelPath);
+  } catch (e) {
+    console.warn(`[Sync Warning] Could not copy to ${rootExcelPath}: ${e.message}`);
+  }
 
   const htmlPath = path.join(__dirname, '../reports/execution-report.html');
   generateHtmlReport(reporter.results, htmlPath);
