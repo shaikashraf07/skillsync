@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "test": "jest --runInBand --forceExit"
+    "test": "jest --runInBand --forceExit",
+    "load-test": "k6 run --summary-export=summary.json scripts/load-test.js",
+    "parse-summary": "node scripts/parseK6Summary.js summary.json"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
