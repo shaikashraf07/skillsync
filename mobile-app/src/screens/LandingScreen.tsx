@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { theme } from '../theme/theme';
 
 export const LandingScreen = ({ navigation }: any) => {
@@ -7,33 +7,31 @@ export const LandingScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={theme.colors.background} />
       <View style={styles.content}>
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>⚡ SkillSync</Text>
-          <Text style={styles.tagline}>AI-Powered Internship & Project Platform</Text>
+        {/* Logo Section */}
+        <View style={styles.heroSection}>
+          <View style={styles.logoBadge}>
+            <Text style={styles.logoBadgeIcon}>⚡</Text>
+          </View>
+          <Text style={styles.logoTitle}>SkillSync</Text>
+          <Text style={styles.tagline}>AI-Powered Mobile Gateway</Text>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Empowering Students & Recruiters</Text>
-          <Text style={styles.cardDescription}>
-            Match with top internships using automated NLP resume scoring, gap analysis, and transparent candidate ranking.
-          </Text>
-        </View>
-
-        <View style={styles.buttonContainer}>
+        {/* Action Buttons Section */}
+        <View style={styles.actionSection}>
           <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={() => navigation.navigate('Signup')}
-            activeOpacity={0.8}
+            style={styles.loginButton}
+            onPress={() => navigation.navigate('Login')}
+            activeOpacity={0.85}
           >
-            <Text style={styles.primaryButtonText}>Get Started</Text>
+            <Text style={styles.loginButtonText}>Log In</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={() => navigation.navigate('Login')}
-            activeOpacity={0.8}
+            style={styles.signupButton}
+            onPress={() => navigation.navigate('Signup')}
+            activeOpacity={0.85}
           >
-            <Text style={styles.secondaryButtonText}>Sign In</Text>
+            <Text style={styles.signupButtonText}>Create Account</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -48,67 +46,78 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: theme.spacing.lg,
+    padding: theme.spacing.xl,
     justifyContent: 'space-between',
-  },
-  logoContainer: {
-    marginTop: theme.spacing.xl * 2,
     alignItems: 'center',
   },
-  logoText: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
+  heroSection: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoBadge: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#1E293B',
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  logoBadgeIcon: {
+    fontSize: 48,
+  },
+  logoTitle: {
+    fontSize: 38,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
   tagline: {
-    fontSize: 14,
+    fontSize: 15,
     color: theme.colors.textSecondary,
     marginTop: theme.spacing.xs,
+    fontWeight: '500',
   },
-  card: {
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.cardBorder,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.sm,
-  },
-  cardDescription: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    lineHeight: 22,
-  },
-  buttonContainer: {
+  actionSection: {
+    width: '100%',
     gap: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.xl,
   },
-  primaryButton: {
+  loginButton: {
     backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.md,
+    paddingVertical: 16,
     borderRadius: theme.borderRadius.md,
     alignItems: 'center',
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  primaryButtonText: {
+  loginButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 17,
+    fontWeight: '700',
   },
-  secondaryButton: {
+  signupButton: {
     backgroundColor: 'transparent',
-    paddingVertical: theme.spacing.md,
+    paddingVertical: 16,
     borderRadius: theme.borderRadius.md,
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: theme.colors.cardBorder,
   },
-  secondaryButtonText: {
+  signupButtonText: {
     color: theme.colors.textPrimary,
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
   },
 });
